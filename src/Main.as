@@ -20,6 +20,7 @@ package
 			addChild(_view);
 			_view.x = 280;
 			_view.y = 200;
+			_view.starting_screen();
 		}
 				
 	}
