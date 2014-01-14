@@ -13,6 +13,7 @@ package model
 			trace("model created");
 		}
 		
+		//initialise the grid before the game
 		public function init(size:Number):void 
 		{
 			trace("creating the game grid of size " + String(size));
@@ -26,6 +27,7 @@ package model
 			//second value:
 			//0: not revealed
 			//1: revealed
+			//2: mrked as mine
 			_size = size;
 			_grid = new Array();
 			for (var i:Number = 0; i < _size * _size; i++) {
@@ -35,6 +37,7 @@ package model
 			fill_array();
 		}
 		
+		//filling the array
 		private function fill_array():void {			
 			//add the mines
 			add_random_mines();
@@ -45,6 +48,7 @@ package model
 			//filling the array
 		}
 		
+		//add the mines to the grid
 		private function add_random_mines():void 
 		{
 			//number of mines depend on the size
@@ -65,6 +69,7 @@ package model
 			}			
 		}
 		
+		//compute the number of adjacent mines
 		private function adjacent_mines():void 
 		{
 			//for each mine, put +1 to the number of adjacent mines for adjacent positions.
@@ -88,6 +93,7 @@ package model
 		}
 		
 		//debug function
+		//print the grid in the trace
 		public function print_grid():void {
 			var to_print:String;
 			for (var i:Number = 0; i < _size; i++) {

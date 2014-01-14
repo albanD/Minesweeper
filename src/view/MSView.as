@@ -1,5 +1,6 @@
 package view 
 {
+	import flash.display.SpreadMethod;
 	import flash.display.Sprite;
 	import flash.display.Shape;
 	import flash.events.TextEvent;
@@ -19,6 +20,8 @@ package view
 		private var _controller:MSController;
 		private var _gameInstance:MovieClip;
 		private var _rect:Shape;
+		private var _screen:Array;
+		private var _container:Sprite;
 		
 		public function MSView(model:MSModel, controller:MSController) 
 		{
@@ -26,26 +29,58 @@ package view
 			_controller = controller;
 			trace("view created");
 			
-			/*
-			_gameInstance = new MovieClip();
-			addChild(_gameInstance);
-			
-			_rect = new Shape;
-			_rect.graphics.beginFill(0x777777);
-			_rect.graphics.drawRoundRect(60, 60, 100, 100, 10);
-			_rect.graphics.endFill();
-			addChild(_rect);	
-			*/			
+			_container = new Sprite();	
 		}
 		
 		public function game_screen():void 
 		{
-			clear_screen();
+			var x:Number; //loop variable
+			var y:Number; //loop variable
+			var to_print:String; //text on the middle of the button
+			var size:Number = _model._size; //the size of the model (shorter than _model._size)
 			
+			clear_screen();
+			_screen = new Array();
+			
+			for (x = 0; x < size; x++) {
+				for (y = 0; y < size; y++) {
+					to_print = "";
+					if (_model._grid[y + x * size][1] == 1) {
+						to_print = String(_model._grid[y + x * size][0]);
+					}
+					if (_model._grid[y + x * size][1] == 2) {
+						to_print = "?";
+					}
+					_screen.push(rect_with_text(y * 25, x * 25, 25, 25, 0xAAAAAA, to_print));
+					_screen[y + x * size].addEventListener(MouseEvent.CLICK, click_handler);
+				}
+			}
+			addChild(_container);
 		}
+		
+		
+		public function click_handler(e:MouseEvent):void {
+			//handle clicks
+			var position_x:Number;
+			var position_y:Number;
+			
+			position_x = Math.floor(e.localX / 25);
+			position_y = Math.floor(e.localY / 25);
+			
+			if (e.ctrlKey) {
+				_controller.mark(position_x, position_y);
+			}
+			else {
+				_controller.reveal(position_x, position_y);
+			}
+			game_screen();
+		}
+		
 		
 		public function starting_screen():void 
 		{
+			_container.x = 280;
+			_container.y = 200;
 			var rules:TextField = new TextField;
 			rules.x = 10;
 			rules.y = 20;
@@ -55,51 +90,50 @@ package view
 				+ "click to discover a mine\n"
 				+ "Ctrl click to mark a mine\n\n"
 				+ "Choose your level";
-			addChild(rules);
+			_container.addChild(rules);
 			
 			//easy button
-			var b_easy:Sprite = rect_with_text(0, 120, 0x00FF00, "easy");
-			b_easy.addEventListener(MouseEvent.CLICK, bClick_easy);
+			var b_easy:Sprite = rect_with_text(0, 120, 75, 25, 0x00FF00, "easy");
+			b_easy.addEventListener(MouseEvent.CLICK, bClick);
 			
 			//medium button
-			var b_medium:Sprite = rect_with_text(75, 120, 0x0000FF, "medium");
-			b_medium.addEventListener(MouseEvent.CLICK, bClick_medium);
+			var b_medium:Sprite = rect_with_text(75, 120, 75, 25, 0x0000FF, "medium");
+			b_medium.addEventListener(MouseEvent.CLICK, bClick);
 			
 			//hard button
-			var b_hard:Sprite = rect_with_text(150, 120, 0xFF0000, "hard");
-			b_hard.addEventListener(MouseEvent.CLICK, bClick_hard);
+			var b_hard:Sprite = rect_with_text(150, 120, 75, 25, 0xFF0000, "hard");
+			b_hard.addEventListener(MouseEvent.CLICK, bClick);	
 			
+			addChild(_container);
 			
-			//click event on buttons
-			function bClick_easy(e:MouseEvent):void {
-				trace("starting game in easy mode");
-				//launch game easy
-				_controller.start_game(1);
+			//click event on buttons for choosing difficulty
+			function bClick(e:MouseEvent):void {
+				if (e.currentTarget == b_easy) {
+					trace("starting game in easy mode");
+					//launch game easy
+					_controller.start_game(1);
+				}
+				else if (e.currentTarget == b_medium) {
+					trace("starting game in medium mode");
+					//launch game medium
+					_controller.start_game(2);
+				}
+				else if (e.currentTarget == b_hard) {
+					trace("starting game in hard mode");
+					//launch game hard
+					_controller.start_game(3);
+				}
 				game_screen();
 			}
-			function bClick_medium(e:MouseEvent):void {
-				trace("starting game in medium mode");
-				//launch game medium
-				_controller.start_game(2);
-				game_screen();
-			}
-			function bClick_hard(e:MouseEvent):void {
-				trace("starting game in hard mode");
-				//launch game hard
-				_controller.start_game(3);
-				game_screen();
-			}
-			
-						
 		}
 		
 		//create rectangle with text inside
-		public function rect_with_text(x:Number, y:Number, color:uint, text:String):Sprite {
+		public function rect_with_text(x:Number, y:Number, width:Number, height:Number, color:uint, text:String):Sprite {
 			var b_sprite:Sprite = new Sprite;
 			b_sprite.graphics.beginFill(color, 1);
-			b_sprite.graphics.drawRoundRect(x, y, 75, 30, 10);
+			b_sprite.graphics.drawRoundRect(x, y, width, height, 5);
 			b_sprite.graphics.endFill();
-			addChild(b_sprite);
+			_container.addChild(b_sprite);
 			b_sprite.buttonMode = true;
 			b_sprite.mouseChildren = false;
 			// first we add the events to our button
@@ -110,8 +144,8 @@ package view
 			b_sprite_txt.autoSize = TextFieldAutoSize.LEFT;
 			b_sprite_txt.width = b_sprite_txt.textWidth;
 			b_sprite_txt.height = b_sprite_txt.textHeight;
-			b_sprite_txt.x = x+75/2-b_sprite_txt.textWidth/2;
-			b_sprite_txt.y = y+5;
+			b_sprite_txt.x = x+width/2-b_sprite_txt.textWidth/2;
+			b_sprite_txt.y = y+height/2-b_sprite_txt.textHeight/2;
 			b_sprite.addChild(b_sprite_txt);
 			
 			return b_sprite;
@@ -119,19 +153,19 @@ package view
 	
 		//shade events on buttons
 		public function bOver(e:MouseEvent):void {
-			e.target.alpha = .5;
+			e.target.alpha = .8;
 		}
 		
 		public function bOut(e:MouseEvent):void {
 			e.target.alpha = 1;
 		}
 		
-		//cleaning the screen  before the game
+		//cleaning the screen  before the game starts
 		//TODO must be a way cleaner way to do this
 		public function clear_screen():void {
-			while(numChildren)
+			while(_container.numChildren)
 			{
-					removeChildAt(0);
+					_container.removeChildAt(0);
 			}
 }
 	}
