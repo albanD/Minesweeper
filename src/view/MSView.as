@@ -22,43 +22,59 @@ package view
 		private var _rect:Shape;
 		private var _screen:Array;
 		private var _container:Sprite;
+		private var _is_displayed:String; //flag saying who is using the screen (the game do not refresh if you lost or win
 		
-		public function MSView(model:MSModel, controller:MSController) 
+		public function MSView(model:MSModel) 
 		{
 			_model = model;
-			_controller = controller;
 			trace("view created");
 			
-			_container = new Sprite();	
+			_container = new Sprite();
+			_is_displayed = "game";
 		}
 		
+		
+		///////////////////////////
+		//Game Screen
 		public function game_screen():void 
 		{
+			if (_is_displayed != "game") {
+				return;
+			}
 			var x:Number; //loop variable
 			var y:Number; //loop variable
 			var to_print:String; //text on the middle of the button
 			var size:Number = _model._size; //the size of the model (shorter than _model._size)
+			var color:uint = 0x888888; //color to print
 			
 			clear_screen();
+			_container.x = 0;
+			_container.y = 0;
 			_screen = new Array();
 			
 			for (x = 0; x < size; x++) {
 				for (y = 0; y < size; y++) {
 					to_print = "";
 					if (_model._grid[y + x * size][1] == 1) {
+						color = 0xCCCCCC;
+					}
+					else {
+						color = 0x888888;
+					}
+					if (_model._grid[y + x * size][1] == 1) {
 						to_print = String(_model._grid[y + x * size][0]);
 					}
-					if (_model._grid[y + x * size][1] == 2) {
+					else if (_model._grid[y + x * size][1] == 2) {
 						to_print = "?";
 					}
-					_screen.push(rect_with_text(y * 25, x * 25, 25, 25, 0xAAAAAA, to_print));
+					_screen.push(rect_with_text(y * 25, x * 25, 25, 25, color, to_print));
 					_screen[y + x * size].addEventListener(MouseEvent.CLICK, click_handler);
 				}
 			}
 			addChild(_container);
 		}
 		
-		
+		//click handler for game screen
 		public function click_handler(e:MouseEvent):void {
 			//handle clicks
 			var position_x:Number;
@@ -77,19 +93,29 @@ package view
 		}
 		
 		
-		public function starting_screen():void 
+		///////////////////////////
+		//Starting screen
+		public function starting_screen(controller:MSController):void 
 		{
+			_is_displayed = "starting";
+			//get the controller
+			_controller = controller;
+			//clear the screen (for multiple games)
+			clear_screen();
+			//center the starting screen
 			_container.x = 280;
 			_container.y = 200;
+			//print the rules
 			var rules:TextField = new TextField;
 			rules.x = 10;
 			rules.y = 20;
-			rules.width = 200;
-			rules.height = 200;
 			rules.text = "The rules:\n"
 				+ "click to discover a mine\n"
 				+ "Ctrl click to mark a mine\n\n"
 				+ "Choose your level";
+			rules.autoSize = TextFieldAutoSize.LEFT;
+			rules.width = rules.textWidth;
+			rules.height = rules.textHeight;
 			_container.addChild(rules);
 			
 			//easy button
@@ -111,21 +137,97 @@ package view
 				if (e.currentTarget == b_easy) {
 					trace("starting game in easy mode");
 					//launch game easy
-					_controller.start_game(1);
+					_is_displayed = "game";
+					_controller.launch_game(1);
 				}
 				else if (e.currentTarget == b_medium) {
 					trace("starting game in medium mode");
 					//launch game medium
-					_controller.start_game(2);
+					_is_displayed = "game";
+					_controller.launch_game(2);
 				}
 				else if (e.currentTarget == b_hard) {
 					trace("starting game in hard mode");
 					//launch game hard
-					_controller.start_game(3);
+					_is_displayed = "game";
+					_controller.launch_game(3);
 				}
 				game_screen();
 			}
 		}
+		
+		///////////////////////////
+		//Play again screen
+		public function play_again(result:String):void 
+		{
+			_is_displayed = "replay";
+			//clear screen
+			clear_screen();			
+			//show where are the minesvar x:Number; //loop variable
+			var y:Number; //loop variable
+			var to_print:String; //text on the middle of the button
+			var size:Number = _model._size; //the size of the model (shorter than _model._size)
+			var color:uint;
+			
+			_container.x = 0;
+			_container.y = 0;
+			_screen = new Array();
+			
+			for (x = 0; x < size; x++) {
+				for (y = 0; y < size; y++) {
+					to_print = "";
+					if (_model._grid[y + x * size][1] == 1) {
+						color = 0xCCCCCC;
+					}
+					else {
+						color = 0x888888;
+					}
+					if (_model._grid[y + x * size][0] == 9) {
+						color = 0xFF0000;
+					}
+					if (_model._grid[y + x * size][1] == 1) {
+						to_print = String(_model._grid[y + x * size][0]);
+					}
+					else if (_model._grid[y + x * size][1] == 2) {
+						to_print = "?";
+					}
+					_screen.push(rect_with_text(y * 25, x * 25, 25, 25, color, to_print));
+					_screen[y + x * size].addEventListener(MouseEvent.CLICK, click_handler);
+				}
+			}
+			
+			//play again?
+			var pa:TextField = new TextField;
+			pa.x = _model._size*25+20;
+			pa.y = 220;
+			pa.autoSize = TextFieldAutoSize.LEFT;
+			pa.text = result + "\nWould you like to play again?";
+			pa.autoSize = TextFieldAutoSize.LEFT;
+			pa.width = pa.textWidth;
+			pa.height = pa.textHeight;
+			_container.addChild(pa);
+			
+			//yes button
+			var b_yes:Sprite = rect_with_text(_model._size*25+20, 300, 75, 25, 0x00FF00, "Play again");
+			b_yes.addEventListener(MouseEvent.CLICK, start_game);
+			
+			//no button
+			var b_no:Sprite = rect_with_text(_model._size*25+20+75, 300, 75, 25, 0xFF00FF, "Quit");
+			b_no.addEventListener(MouseEvent.CLICK, quit);
+			addChild(_container);
+			
+			
+			//function to handle answer because there is an argument
+			function start_game(e:MouseEvent):void 
+			{
+				_controller.start_game();
+			}
+			function quit(e:MouseEvent):void 
+			{
+				_controller.quit();
+			}
+		}
+		
 		
 		//create rectangle with text inside
 		public function rect_with_text(x:Number, y:Number, width:Number, height:Number, color:uint, text:String):Sprite {
