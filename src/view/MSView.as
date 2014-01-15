@@ -22,7 +22,7 @@ package view
 		private var _rect:Shape;
 		private var _screen:Array;
 		private var _container:Sprite;
-		private var _is_displayed:String; //flag saying who is using the screen (the game do not refresh if you lost or win
+		private var _is_displayed:String; //flag saying who is using the screen (the game do not refresh the screen again if you lost or win)
 		
 		public function MSView(model:MSModel) 
 		{
@@ -52,25 +52,28 @@ package view
 			_container.y = 0;
 			_screen = new Array();
 			
+			//for each element
 			for (x = 0; x < size; x++) {
 				for (y = 0; y < size; y++) {
 					to_print = "";
+					//set the default color
+					color = 0x888888;
+					//if its revealed, change the color and print the number of adjacent mines
 					if (_model._grid[y + x * size][1] == 1) {
 						color = 0xCCCCCC;
-					}
-					else {
-						color = 0x888888;
-					}
-					if (_model._grid[y + x * size][1] == 1) {
 						to_print = String(_model._grid[y + x * size][0]);
 					}
+					//if its marked, print "?"
 					else if (_model._grid[y + x * size][1] == 2) {
 						to_print = "?";
 					}
+					//create the button
 					_screen.push(rect_with_text(y * 25, x * 25, 25, 25, color, to_print));
+					//add the handler to the button
 					_screen[y + x * size].addEventListener(MouseEvent.CLICK, click_handler);
 				}
 			}
+			//add the main container to the screen
 			addChild(_container);
 		}
 		
@@ -158,34 +161,36 @@ package view
 		
 		///////////////////////////
 		//Play again screen
-		public function play_again(result:String):void 
+		public function play_again(result:Number):void 
 		{
 			_is_displayed = "replay";
 			//clear screen
-			clear_screen();			
-			//show where are the minesvar x:Number; //loop variable
+			clear_screen();
+			_container.x = 0;
+			_container.y = 0;
+			
+			//show where are the mines
+			var x:Number; //loop variable
 			var y:Number; //loop variable
 			var to_print:String; //text on the middle of the button
 			var size:Number = _model._size; //the size of the model (shorter than _model._size)
 			var color:uint;
-			
-			_container.x = 0;
-			_container.y = 0;
 			_screen = new Array();
-			
 			for (x = 0; x < size; x++) {
 				for (y = 0; y < size; y++) {
 					to_print = "";
+					//set the default color
+					color = 0x888888;
+					if (_model._grid[y + x * size][0] == 9) {
+						if (result == 1) {
+							color = 0x00FF00;
+						}
+						else {
+							color = 0xFF0000;
+						}
+					}
 					if (_model._grid[y + x * size][1] == 1) {
 						color = 0xCCCCCC;
-					}
-					else {
-						color = 0x888888;
-					}
-					if (_model._grid[y + x * size][0] == 9) {
-						color = 0xFF0000;
-					}
-					if (_model._grid[y + x * size][1] == 1) {
 						to_print = String(_model._grid[y + x * size][0]);
 					}
 					else if (_model._grid[y + x * size][1] == 2) {
@@ -199,20 +204,26 @@ package view
 			//play again?
 			var pa:TextField = new TextField;
 			pa.x = _model._size*25+20;
-			pa.y = 220;
+			pa.y = 50;
 			pa.autoSize = TextFieldAutoSize.LEFT;
-			pa.text = result + "\nWould you like to play again?";
+			if (result == 1) {
+				pa.text = "Congratulations!!! You won.\n\nWould you like to play again?";
+			}
+			else {
+				pa.text = "Boom!!!!\nYou lost!\n\nWould you like to play again?";
+			}
+			
 			pa.autoSize = TextFieldAutoSize.LEFT;
 			pa.width = pa.textWidth;
 			pa.height = pa.textHeight;
 			_container.addChild(pa);
 			
 			//yes button
-			var b_yes:Sprite = rect_with_text(_model._size*25+20, 300, 75, 25, 0x00FF00, "Play again");
+			var b_yes:Sprite = rect_with_text(_model._size*25+20, 130, 75, 25, 0x00FF00, "Play again");
 			b_yes.addEventListener(MouseEvent.CLICK, start_game);
 			
 			//no button
-			var b_no:Sprite = rect_with_text(_model._size*25+20+75, 300, 75, 25, 0xFF00FF, "Quit");
+			var b_no:Sprite = rect_with_text(_model._size*25+20+75, 130, 75, 25, 0xFF00FF, "Quit");
 			b_no.addEventListener(MouseEvent.CLICK, quit);
 			addChild(_container);
 			
@@ -229,27 +240,32 @@ package view
 		}
 		
 		
-		//create rectangle with text inside
+		//create rectangle with text inside at given position, with given size with given color.
 		public function rect_with_text(x:Number, y:Number, width:Number, height:Number, color:uint, text:String):Sprite {
+			//create the rectangle
 			var b_sprite:Sprite = new Sprite;
 			b_sprite.graphics.beginFill(color, 1);
 			b_sprite.graphics.drawRoundRect(x, y, width, height, 5);
 			b_sprite.graphics.endFill();
+			//add it to our main container
 			_container.addChild(b_sprite);
+			//be a button
 			b_sprite.buttonMode = true;
 			b_sprite.mouseChildren = false;
-			// first we add the events to our button
+			//add the events to our button
 			b_sprite.addEventListener(MouseEvent.ROLL_OVER, bOver);
 			b_sprite.addEventListener(MouseEvent.ROLL_OUT, bOut);
+			//create, fill and size the text
 			var b_sprite_txt:TextField = new TextField;
 			b_sprite_txt.text = text;
 			b_sprite_txt.autoSize = TextFieldAutoSize.LEFT;
 			b_sprite_txt.width = b_sprite_txt.textWidth;
 			b_sprite_txt.height = b_sprite_txt.textHeight;
 			b_sprite_txt.x = x+width/2-b_sprite_txt.textWidth/2;
-			b_sprite_txt.y = y+height/2-b_sprite_txt.textHeight/2;
+			b_sprite_txt.y = y + height / 2 - b_sprite_txt.textHeight / 2;
+			//add the text to the button
 			b_sprite.addChild(b_sprite_txt);
-			
+			//return the rect
 			return b_sprite;
 		}
 	

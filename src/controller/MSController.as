@@ -97,14 +97,14 @@ package controller
 					return;
 				}
 			}
-			_view.play_again("Congratulations!!! You won.\n");
+			_view.play_again(1);
 		}
 		
 		//loose the game function
 		private function loose_game():void 
 		{
 			trace("you lost");
-			_view.play_again("Boom!!!!\nYou lost!\n");
+			_view.play_again(0);
 		}
 		
 		//close the program
