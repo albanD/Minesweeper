@@ -53,7 +53,7 @@ package model
 		{
 			//number of mines depend on the size
 			//TODO can be asked to the user
-			var n_mines:Number = _size * _size / 8;
+			var n_mines:Number = _size * _size / 8 - 1;
 			var x:Number;
 			var y:Number;
 			

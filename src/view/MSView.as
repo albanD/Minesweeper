@@ -24,6 +24,15 @@ package view
 		private var _container:Sprite;
 		private var _is_displayed:String; //flag saying who is using the screen (the game do not refresh the screen again if you lost or win)
 		
+		//color variables
+		private var not_revealed_grey:uint = 0x888888;
+		private var revealed_grey:uint = 0xCCCCCC;
+		private var blue:uint = 0x0000FF;
+		private var red:uint = 0xFF0000;
+		private var green:uint = 0x00FF00;
+		private var purple:uint = 0xFF00FF;
+		private var orange:uint = 0xF4661B;
+		
 		public function MSView(model:MSModel) 
 		{
 			_model = model;
@@ -45,11 +54,11 @@ package view
 			var y:Number; //loop variable
 			var to_print:String; //text on the middle of the button
 			var size:Number = _model._size; //the size of the model (shorter than _model._size)
-			var color:uint = 0x888888; //color to print
+			var color:uint; //color to print
 			
 			clear_screen();
-			_container.x = 0;
-			_container.y = 0;
+			_container.x = 20;
+			_container.y = 20;
 			_screen = new Array();
 			
 			//for each element
@@ -57,15 +66,18 @@ package view
 				for (y = 0; y < size; y++) {
 					to_print = "";
 					//set the default color
-					color = 0x888888;
+					color = not_revealed_grey;
 					//if its revealed, change the color and print the number of adjacent mines
 					if (_model._grid[y + x * size][1] == 1) {
-						color = 0xCCCCCC;
-						to_print = String(_model._grid[y + x * size][0]);
+						color = revealed_grey;
+						if (_model._grid[y + x * size][0] !=0) {
+							to_print = String(_model._grid[y + x * size][0]);
+						}
 					}
 					//if its marked, print "?"
 					else if (_model._grid[y + x * size][1] == 2) {
 						to_print = "?";
+						color = orange;
 					}
 					//create the button
 					_screen.push(rect_with_text(y * 25, x * 25, 25, 25, color, to_print));
@@ -122,15 +134,15 @@ package view
 			_container.addChild(rules);
 			
 			//easy button
-			var b_easy:Sprite = rect_with_text(0, 120, 75, 25, 0x00FF00, "easy");
+			var b_easy:Sprite = rect_with_text(0, 120, 75, 25, green, "easy");
 			b_easy.addEventListener(MouseEvent.CLICK, bClick);
 			
 			//medium button
-			var b_medium:Sprite = rect_with_text(75, 120, 75, 25, 0x0000FF, "medium");
+			var b_medium:Sprite = rect_with_text(75, 120, 75, 25, blue, "medium");
 			b_medium.addEventListener(MouseEvent.CLICK, bClick);
 			
 			//hard button
-			var b_hard:Sprite = rect_with_text(150, 120, 75, 25, 0xFF0000, "hard");
+			var b_hard:Sprite = rect_with_text(150, 120, 75, 25, red, "hard");
 			b_hard.addEventListener(MouseEvent.CLICK, bClick);	
 			
 			addChild(_container);
@@ -166,8 +178,8 @@ package view
 			_is_displayed = "replay";
 			//clear screen
 			clear_screen();
-			_container.x = 0;
-			_container.y = 0;
+			_container.x = 20;
+			_container.y = 20;
 			
 			//show where are the mines
 			var x:Number; //loop variable
@@ -180,21 +192,25 @@ package view
 				for (y = 0; y < size; y++) {
 					to_print = "";
 					//set the default color
-					color = 0x888888;
-					if (_model._grid[y + x * size][0] == 9) {
-						if (result == 1) {
-							color = 0x00FF00;
-						}
-						else {
-							color = 0xFF0000;
-						}
-					}
+					color = not_revealed_grey;
 					if (_model._grid[y + x * size][1] == 1) {
-						color = 0xCCCCCC;
-						to_print = String(_model._grid[y + x * size][0]);
+						color = revealed_grey;
+						if (_model._grid[y + x * size][0] !=0) {
+							to_print = String(_model._grid[y + x * size][0]);
+						}
 					}
 					else if (_model._grid[y + x * size][1] == 2) {
 						to_print = "?";
+						color = orange;
+					}
+					if (_model._grid[y + x * size][0] == 9) {
+						to_print = "X";
+						if (result == 1) {
+							color = green;
+						}
+						else {
+							color = red;
+						}
 					}
 					_screen.push(rect_with_text(y * 25, x * 25, 25, 25, color, to_print));
 					_screen[y + x * size].addEventListener(MouseEvent.CLICK, click_handler);
@@ -203,7 +219,7 @@ package view
 			
 			//play again?
 			var pa:TextField = new TextField;
-			pa.x = _model._size*25+20;
+			pa.x = _model._size*25+40;
 			pa.y = 50;
 			pa.autoSize = TextFieldAutoSize.LEFT;
 			if (result == 1) {
@@ -219,11 +235,11 @@ package view
 			_container.addChild(pa);
 			
 			//yes button
-			var b_yes:Sprite = rect_with_text(_model._size*25+20, 130, 75, 25, 0x00FF00, "Play again");
+			var b_yes:Sprite = rect_with_text(_model._size*25+20, 130, 75, 25, green, "Play again");
 			b_yes.addEventListener(MouseEvent.CLICK, start_game);
 			
 			//no button
-			var b_no:Sprite = rect_with_text(_model._size*25+20+75, 130, 75, 25, 0xFF00FF, "Quit");
+			var b_no:Sprite = rect_with_text(_model._size*25+20+75, 130, 75, 25, purple, "Quit");
 			b_no.addEventListener(MouseEvent.CLICK, quit);
 			addChild(_container);
 			
