@@ -14,6 +14,10 @@ package controller
 		private var _model:MSModel;
 		private var _view:MSView;
 		
+		//win screen variable
+		private var WIN:Number = 1;
+		private var LOST:Number = 0;
+		
 		public function MSController(model:MSModel, view:MSView) 
 		{
 			_model = model;
@@ -46,23 +50,24 @@ package controller
 		public function reveal(x:Number, y:Number):void 
 		{
 			//if its already revealed or marked: do nothing
-			if (_model._grid[x + y * _model._size][1] == 1) {
+			if (_model._grid[x][y].is_revealed) {
 				return;
 			}
-			else if (_model._grid[x + y * _model._size][1] == 2) {
+			else if (_model._grid[x][y].is_marked) {
 				return;
 			}
 			//if its a mine, you lost
-			else if (_model._grid[x + y * _model._size][0] == 9) {
+			else if (_model._grid[x][y].is_mine) {
 				loose_game();
 			}
 			//else reveal the place and all adjacent places
 			else {
-				_model._grid[x + y * _model._size][1] = 1;
-				if (_model._grid[x + y * _model._size][0] == 0) {
+				_model._grid[x][y].is_revealed = true;
+				
+				if (_model._grid[x][y].adjacent_mines == 0) {
 					for (var i:Number = -1; i < 2; i++) {
 						for (var j:Number = -1; j < 2; j++) {
-							if(x+i<_model._size && x+i >= 0 && y+j<_model._size && y+j>=0) {
+							if(_model.is_inside(x+i, y+j)) {
 								reveal(x + i, y + j);
 							}
 						}
@@ -75,36 +80,32 @@ package controller
 		//mark a mine
 		public function mark(x:Number, y:Number):void 
 		{
-			//if its already revealed, do nothing
-			if (_model._grid[x + y * _model._size][1] == 1) {
-				return;
-			}
-			//if its already marked, unmark it
-			else if (_model._grid[x + y * _model._size][1] == 2) {
-				_model._grid[x + y * _model._size][1] = 0;
-			}
-			//if its not markes, mark it
-			else if (_model._grid[x + y * _model._size][1] == 0) {
-				_model._grid[x + y * _model._size][1] = 2;
+			var element:Tile = _model._grid[x][y]
+			
+			if (!element.is_revealed) {
+				element.is_marked = !element.is_marked;
 			}
 		}
 		
 		//test if the player win the game by leaving only mines
 		private function is_win():void 
 		{
-			for (var i:Number = 0; i < _model._size * _model._size; i++) {
-				if (_model._grid[i][1] == 0 && _model._grid[i][0] != 9) {
-					return;
+			var size:Number = _model._size;
+			for (var x:Number = 0; x < size; x++) {
+				for (var y:Number = 0; y < size; y++) {
+					if (!_model._grid[x][y].is_revealed && !_model._grid[x][y].is_mine) {
+						return;
+					}
 				}
 			}
-			_view.play_again(1);
+			_view.play_again(WIN);
 		}
 		
 		//loose the game function
 		private function loose_game():void 
 		{
 			trace("you lost");
-			_view.play_again(0);
+			_view.play_again(LOST);
 		}
 		
 		//close the program

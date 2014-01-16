@@ -22,7 +22,7 @@ package view
 		private var _rect:Shape;
 		private var _screen:Array;
 		private var _container:Sprite;
-		private var _is_displayed:String; //flag saying who is using the screen (the game do not refresh the screen again if you lost or win)
+		private var in_game:Boolean;
 		
 		//color variables
 		private var not_revealed_grey:uint = 0x888888;
@@ -33,13 +33,22 @@ package view
 		private var purple:uint = 0xFF00FF;
 		private var orange:uint = 0xF4661B;
 		
+		//game launch variable
+		private var EASYGAME:Number = 1;
+		private var MEDIUMGAME:Number = 2;
+		private var HARDGAME:Number = 3;
+		
+		//window size related variables
+		private var game_button_width:Number = 25;
+		private var game_button_height:Number = 25;
+		
 		public function MSView(model:MSModel) 
 		{
 			_model = model;
 			trace("view created");
 			
 			_container = new Sprite();
-			_is_displayed = "game";
+			in_game = false;
 		}
 		
 		
@@ -47,13 +56,13 @@ package view
 		//Game Screen
 		public function game_screen():void 
 		{
-			if (_is_displayed != "game") {
+			if (!in_game) {
 				return;
 			}
-			var x:Number; //loop variable
-			var y:Number; //loop variable
-			var to_print:String; //text on the middle of the button
-			var size:Number = _model._size; //the size of the model (shorter than _model._size)
+			var x:Number;
+			var y:Number;
+			var to_print:String; //buffer for text on the middle of the button
+			var size:Number = _model._size;
 			var color:uint; //color to print
 			
 			clear_screen();
@@ -68,20 +77,21 @@ package view
 					//set the default color
 					color = not_revealed_grey;
 					//if its revealed, change the color and print the number of adjacent mines
-					if (_model._grid[y + x * size][1] == 1) {
+					if (_model._grid[x][y].is_revealed) {
 						color = revealed_grey;
-						if (_model._grid[y + x * size][0] !=0) {
-							to_print = String(_model._grid[y + x * size][0]);
+						if (_model._grid[x][y].adjacent_mines != 0) {
+							to_print = String(_model._grid[x][y].adjacent_mines);
 						}
 					}
 					//if its marked, print "?"
-					else if (_model._grid[y + x * size][1] == 2) {
+					else if (_model._grid[x][y].is_marked) {
 						to_print = "?";
 						color = orange;
 					}
 					//create the button
-					_screen.push(rect_with_text(y * 25, x * 25, 25, 25, color, to_print));
-					//add the handler to the button
+					_screen.push(rect_with_text(x * game_button_width, y * game_button_height, 
+												game_button_width, game_button_height, color, to_print));
+					//add the handler to the button (filling by columns)
 					_screen[y + x * size].addEventListener(MouseEvent.CLICK, click_handler);
 				}
 			}
@@ -112,7 +122,7 @@ package view
 		//Starting screen
 		public function starting_screen(controller:MSController):void 
 		{
-			_is_displayed = "starting";
+			in_game = false;
 			//get the controller
 			_controller = controller;
 			//clear the screen (for multiple games)
@@ -152,20 +162,20 @@ package view
 				if (e.currentTarget == b_easy) {
 					trace("starting game in easy mode");
 					//launch game easy
-					_is_displayed = "game";
-					_controller.launch_game(1);
+					in_game = true;
+					_controller.launch_game(EASYGAME);
 				}
 				else if (e.currentTarget == b_medium) {
 					trace("starting game in medium mode");
 					//launch game medium
-					_is_displayed = "game";
-					_controller.launch_game(2);
+					in_game = true;
+					_controller.launch_game(MEDIUMGAME);
 				}
 				else if (e.currentTarget == b_hard) {
 					trace("starting game in hard mode");
 					//launch game hard
-					_is_displayed = "game";
-					_controller.launch_game(3);
+					in_game = true;
+					_controller.launch_game(HARDGAME);
 				}
 				game_screen();
 			}
@@ -175,7 +185,7 @@ package view
 		//Play again screen
 		public function play_again(result:Number):void 
 		{
-			_is_displayed = "replay";
+			in_game = false;
 			//clear screen
 			clear_screen();
 			_container.x = 20;
@@ -188,22 +198,25 @@ package view
 			var size:Number = _model._size; //the size of the model (shorter than _model._size)
 			var color:uint;
 			_screen = new Array();
+			
 			for (x = 0; x < size; x++) {
 				for (y = 0; y < size; y++) {
 					to_print = "";
 					//set the default color
 					color = not_revealed_grey;
-					if (_model._grid[y + x * size][1] == 1) {
+					//if its revealed, change the color and print the number of adjacent mines
+					if (_model._grid[x][y].is_revealed) {
 						color = revealed_grey;
-						if (_model._grid[y + x * size][0] !=0) {
-							to_print = String(_model._grid[y + x * size][0]);
+						if (_model._grid[x][y].adjacent_mines != 0) {
+							to_print = String(_model._grid[x][y].adjacent_mines);
 						}
 					}
-					else if (_model._grid[y + x * size][1] == 2) {
+					//if its marked, print "?"
+					else if (_model._grid[x][y].is_marked) {
 						to_print = "?";
 						color = orange;
 					}
-					if (_model._grid[y + x * size][0] == 9) {
+					if (_model._grid[x][y].is_mine) {
 						to_print = "X";
 						if (result == 1) {
 							color = green;
@@ -212,10 +225,14 @@ package view
 							color = red;
 						}
 					}
-					_screen.push(rect_with_text(y * 25, x * 25, 25, 25, color, to_print));
+					//create the button
+					_screen.push(rect_with_text(x * game_button_width, y * game_button_height, 
+												game_button_width, game_button_height, color, to_print));
+					//add the handler to the button (filling by columns)
 					_screen[y + x * size].addEventListener(MouseEvent.CLICK, click_handler);
 				}
 			}
+			
 			
 			//play again?
 			var pa:TextField = new TextField;
