@@ -7,6 +7,8 @@ package controller
 	import flash.events.KeyboardEvent;
 	import flash.ui.Keyboard;
 	import flash.system.System;
+	import flash.external.ExternalInterface;
+
 	
 	
 	public class MSController 
@@ -17,6 +19,10 @@ package controller
 		//win screen variable
 		private var WIN:Number = 1;
 		private var LOST:Number = 0;
+		//game launch variable
+		private var EASYGAME:Number = 1;
+		private var MEDIUMGAME:Number = 2;
+		private var HARDGAME:Number = 3;
 		
 		public function MSController(model:MSModel, view:MSView) 
 		{
@@ -33,13 +39,13 @@ package controller
 		//game starting funtion
 		public function launch_game(mode:Number):void {
 			var size:Number;
-			if (mode == 1) {
+			if (mode == EASYGAME) {
 				size = 5;
 			}
-			else if (mode == 2) {
+			else if (mode == MEDIUMGAME) {
 				size = 10;
 			}
-			else if (mode == 3) {
+			else if (mode == HARDGAME) {
 				size = 15;
 			}
 			_model.init(size);
@@ -50,17 +56,14 @@ package controller
 		public function reveal(x:Number, y:Number):void 
 		{
 			//if its already revealed or marked: do nothing
-			if (_model._grid[x][y].is_revealed) {
-				return;
-			}
-			else if (_model._grid[x][y].is_marked) {
+			if (_model._grid[x][y].is_revealed || _model._grid[x][y].is_marked) {
 				return;
 			}
 			//if its a mine, you lost
 			else if (_model._grid[x][y].is_mine) {
 				loose_game();
 			}
-			//else reveal the place and all adjacent places
+			//else reveal the place and all adjacent places if there are no adjacent mines
 			else {
 				_model._grid[x][y].is_revealed = true;
 				
@@ -108,10 +111,19 @@ package controller
 			_view.play_again(LOST);
 		}
 		
-		//close the program
+		//close the program if in a window, do nothing if its in the browser.
 		public function quit():void 
 		{
-			System.exit(0);
+			//if we are in a browser(works with firefox), we cannot quit so restart the game
+			try {
+				var userAgent:String;
+				userAgent = ExternalInterface.call("window.navigator");
+				this.start_game();
+			}
+			catch (e:Error) {
+				//if we are in a flash window, quit it
+				System.exit(0);
+			}
 		}
 	}
 

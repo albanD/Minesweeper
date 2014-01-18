@@ -1,9 +1,9 @@
 package 
 {
 	import flash.display.Sprite;
+	import model.*;
 	import view.*;
 	import controller.*;
-	import model.*;
 	
 	public class Main extends Sprite 
 	{

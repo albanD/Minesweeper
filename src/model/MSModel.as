@@ -69,10 +69,10 @@ package model
 		//compute the number of adjacent mines
 		private function adjacent_mines():void 
 		{
-			//for each mine, put +1 to the number of adjacent mines for adjacent positions.
+			//for each tile.
 			for (var i:Number = 0; i < _size; i++) {
 				for (var j:Number = 0; j < _size; j++) {
-					//if its a mine
+					//if its a mine.
 					if (_grid[i][j].is_mine) {
 						//for all adjacent elements
 						for (var k:Number = -1; k <= 1; k++) {
@@ -81,7 +81,7 @@ package model
 								if (is_inside(i + k, j + l)) {
 									//if it's not a mine
 									if (!_grid[i + k][j + l].is_mine) {
-										//add one to its value of adjacent
+										//add one to its value of adjacent mines
 										_grid[i + k][j + l].adjacent_mines += 1;
 									}
 								}

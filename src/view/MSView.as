@@ -41,6 +41,11 @@ package view
 		//window size related variables
 		private var game_button_width:Number = 25;
 		private var game_button_height:Number = 25;
+		private var container_pos_withgrid_x:Number = 20;
+		private var container_pos_withgrid_y:Number = 20;
+		private var container_pos_withoutgrid_x:Number = 280;
+		private var container_pos_withoutgrid_y:Number = 200;
+		
 		
 		public function MSView(model:MSModel) 
 		{
@@ -56,18 +61,19 @@ package view
 		//Game Screen
 		public function game_screen():void 
 		{
+			//this in_game boolean allows us to know if the game is over or not
 			if (!in_game) {
 				return;
 			}
-			var x:Number;
-			var y:Number;
-			var to_print:String; //buffer for text on the middle of the button
+			var x:Number; //columns variable
+			var y:Number; //rows variable
+			var to_print:String; //buffer about what should be printed in the tile
 			var size:Number = _model._size;
-			var color:uint; //color to print
+			var color:uint; //the color of the tile
 			
 			clear_screen();
-			_container.x = 20;
-			_container.y = 20;
+			_container.x = container_pos_withgrid_x;
+			_container.y = container_pos_withgrid_y;
 			_screen = new Array();
 			
 			//for each element
@@ -91,7 +97,7 @@ package view
 					//create the button
 					_screen.push(rect_with_text(x * game_button_width, y * game_button_height, 
 												game_button_width, game_button_height, color, to_print));
-					//add the handler to the button (filling by columns)
+					//add the handler to the button
 					_screen[y + x * size].addEventListener(MouseEvent.CLICK, click_handler);
 				}
 			}
@@ -105,8 +111,8 @@ package view
 			var position_x:Number;
 			var position_y:Number;
 			
-			position_x = Math.floor(e.localX / 25);
-			position_y = Math.floor(e.localY / 25);
+			position_x = Math.floor(e.localX / game_button_width);
+			position_y = Math.floor(e.localY / game_button_height);
 			
 			if (e.ctrlKey) {
 				_controller.mark(position_x, position_y);
@@ -128,8 +134,8 @@ package view
 			//clear the screen (for multiple games)
 			clear_screen();
 			//center the starting screen
-			_container.x = 280;
-			_container.y = 200;
+			_container.x = container_pos_withoutgrid_x;
+			_container.y = container_pos_withoutgrid_y;
 			//print the rules
 			var rules:TextField = new TextField;
 			rules.x = 10;
@@ -188,14 +194,14 @@ package view
 			in_game = false;
 			//clear screen
 			clear_screen();
-			_container.x = 20;
-			_container.y = 20;
+			_container.x = container_pos_withgrid_x;
+			_container.y = container_pos_withgrid_y;
 			
 			//show where are the mines
-			var x:Number; //loop variable
-			var y:Number; //loop variable
+			var x:Number; //columns variable
+			var y:Number; //rows variable
 			var to_print:String; //text on the middle of the button
-			var size:Number = _model._size; //the size of the model (shorter than _model._size)
+			var size:Number = _model._size;
 			var color:uint;
 			_screen = new Array();
 			
@@ -238,7 +244,6 @@ package view
 			var pa:TextField = new TextField;
 			pa.x = _model._size*25+40;
 			pa.y = 50;
-			pa.autoSize = TextFieldAutoSize.LEFT;
 			if (result == 1) {
 				pa.text = "Congratulations!!! You won.\n\nWould you like to play again?";
 			}
@@ -261,7 +266,7 @@ package view
 			addChild(_container);
 			
 			
-			//function to handle answer because there is an argument
+			//function to handle answer
 			function start_game(e:MouseEvent):void 
 			{
 				_controller.start_game();
@@ -285,7 +290,7 @@ package view
 			//be a button
 			b_sprite.buttonMode = true;
 			b_sprite.mouseChildren = false;
-			//add the events to our button
+			//add the events for shade to our button
 			b_sprite.addEventListener(MouseEvent.ROLL_OVER, bOver);
 			b_sprite.addEventListener(MouseEvent.ROLL_OUT, bOut);
 			//create, fill and size the text
@@ -318,7 +323,7 @@ package view
 			{
 					_container.removeChildAt(0);
 			}
-}
+		}
 	}
 
 }
